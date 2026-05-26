@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Acceso bloqueado</title>
+  <style>
+    :root {
+      --bg: #fff5f5;
+      --red: #e53e3e;
+      --red-dark: #c53030;
+      --text: #2d3748;
+      --muted: #718096;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
+      gap: 20px;
+      text-align: center;
+    }
+    .icon {
+      width: 80px;
+      height: 80px;
+      background: #fee2e2;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon svg {
+      width: 44px;
+      height: 44px;
+      stroke: var(--red);
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--red-dark);
+    }
+    p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      max-width: 320px;
+      line-height: 1.6;
+    }
+    .dist-badge {
+      background: #fee2e2;
+      color: var(--red);
+      border: 1px solid #fca5a5;
+      border-radius: 20px;
+      padding: 6px 18px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: none;
+    }
+    .hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+      border-top: 1px solid #fed7d7;
+      padding-top: 16px;
+      max-width: 300px;
+    }
+  </style>
+</head>
+<body>
+  <div class="icon">
+    <svg fill="none" viewBox="0 0 24 24" stroke-width="2" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+    </svg>
+  </div>
+
+  <h1>Acceso bloqueado</h1>
+
+  <div class="dist-badge" id="dist-badge"></div>
+
+  <p>Tu ubicación GPS indica que no estás dentro del aula. Para registrar asistencia debés estar presente físicamente en la clase.</p>
+
+  <p class="hint">Si creés que es un error, asegurate de tener el GPS activado y de estar en el aula. Pedile al docente que verifique la configuración del radio.</p>
+
+  <script>
+    // Mostrar la distancia si viene en la URL
+    var params = new URLSearchParams(window.location.search);
+    var dist = params.get('dist');
+    if (dist) {
+      var badge = document.getElementById('dist-badge');
+      badge.textContent = 'Estás a ' + dist + 'm del aula (máximo permitido: ' + (params.get('radio') || '?') + 'm)';
+      badge.style.display = 'inline-block';
+    }
+  </script>
+</body>
+</html>
