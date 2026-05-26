@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel Docente — Asistencia QR</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    /* ─── Variables ─── */
+    :root {
+      --bg: #0f1117;
+      --card: #1a1d27;
+      --border: #2a2d3e;
+      --text: #e8eaf0;
+      --muted: #7b7f96;
+      --accent: #4f8ef7;
+      --green: #22c87a;
+      --red: #f05252;
+      --yellow: #f5a623;
+      --radius: 14px;
+    }
+
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 20px;
+      gap: 24px;
+    }
+
+
+    header {
+      text-align: center;
+    }
+    header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    header p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 6px;
+    }
+
+
+    /* ─── QR Card ─── */
+    .qr-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      width: 100%;
+      max-width: 400px;
+      position: relative;
+    }
+
+
+    .qr-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+
+    #qr-container {
+      background: #ffffff;
+      padding: 16px;
+      border-radius: 10px;
+      position: relative;
+      transition: opacity 0.3s;
+    }
+    #qr-container.refreshing {
+      opacity: 0.3;
+    }
+
+
+    /* ─── Timer ring ─── */
+    .timer-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+
+    .ring-container {
+      position: relative;
+      width: 72px;
+      height: 72px;
+    }
+    .ring-bg {
+      fill: none;
+      stroke: var(--border);
+      stroke-width: 5;
+    }
+    .ring-progress {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 5;
+      stroke-linecap: round;
+      stroke-dasharray: 188;
+      stroke-dashoffset: 0;
+      transform: rotate(-90deg);
+      transform-origin: center;
+      transition: stroke-dashoffset 1s linear, stroke 0.3s;
+    }
+    .ring-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+
+    .timer-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+
+    /* ─── Configuración ─── */
+    .config-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+
+    .config-card h2 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .field label {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .field input, .field select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .field input:focus, .field select:focus {
+      border-color: var(--accent);
+    }
+
+
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 11px 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.85; }
+
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+
+    /* ─── Status bar ─── */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+
+    /* ─── Token info ─── */
+    .token-info {
+      font-size: 0.7rem;
+      color: var(--muted);
+      font-family: monospace;
+      letter-spacing: 0.5px;
+    }
+
+
+    /* ─── Materia badge ─── */
+    .materia-badge {
+      background: #4f8ef720;
+      border: 1px solid #4f8ef740;
+      color: var(--accent);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+
+  <header>
+    <h1>Panel Docente</h1>
+    <p>El QR se renueva automáticamente cada 30 segundos</p>
+  </header>
+
+
+  <!-- Configuración -->
+  <div class="config-card">
+    <h2>Configuración de clase</h2>
+    <div class="field">
+      <label>URL de tu Web App (Apps Script)</label>
+      <input type="text" id="input-url" placeholder="https://script.google.com/macros/s/.../exec" />
+    </div>
+    <div class="field">
+      <label>Materia</label>
+      <input type="text" id="input-materia" placeholder="ej: Programación Web" />
+    </div>
+    <div class="field">
+      <label>Intervalo de rotación del QR</label>
+      <select id="input-intervalo">
+        <option value="30">30 segundos (recomendado)</option>
+        <option value="60">60 segundos</option>
+        <option value="15">15 segundos (alta seguridad)</option>
+      </select>
+    </div>
+    <button class="btn" onclick="iniciarClase()">Iniciar clase</button>
+  </div>
+
+
+  <!-- QR Card (oculta hasta iniciar) -->
+  <div class="qr-card" id="qr-card" style="display:none">
+    <div class="status-bar">
+      <div class="dot"></div>
+      <span>Clase activa</span>
+    </div>
+
+
+    <span id="materia-badge" class="materia-badge">—</span>
+    <span class="qr-label">Mostrá este QR a los alumnos</span>
+
+
+    <div id="qr-container"></div>
+
+
+    <div class="timer-wrapper">
+      <div class="ring-container">
+        <svg width="72" height="72" viewBox="0 0 72 72">
+          <circle class="ring-bg" cx="36" cy="36" r="30"/>
+          <circle class="ring-progress" id="ring" cx="36" cy="36" r="30"/>
+        </svg>
+        <div class="ring-text" id="timer-num">30</div>
+      </div>
+      <span class="timer-label">segundos hasta el próximo QR</span>
+    </div>
+
+
+    <span class="token-info" id="token-display">token: —</span>
+
+
+    <button class="btn btn-secondary" onclick="detenerClase()">Finalizar clase</button>
+  </div>
+
+
+  <script src="qr-generator.js"></script>
+</body>
+</html>
