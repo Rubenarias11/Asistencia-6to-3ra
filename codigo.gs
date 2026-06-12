@@ -4,100 +4,140 @@
 var CONFIG = {
   SPREADSHEET_ID: '1s16g204YIKCDSF3kk76rjTZ8nPmwgrRJFpzILlKNakQ',
   NOMBRE_HOJA: 'Ruben Arias',
-  LAT_AULA: -34.622790,
-  LNG_AULA: -58.541131,
-  RADIO_METROS: 500,
-  VALIDEZ_TOKEN_SEG: 300,
+  LAT_AULA: -34.620828,  // 📍 Coordenadas de la escuela
+  LNG_AULA: -58.516815, 
+  RADIO_METROS: 500,     
+  VALIDEZ_TOKEN_SEG: 300 // 5 minutos de validez máxima para el QR
 };
 
 // ==========================================
-// FUNCIÓN PRINCIPAL: doGet
+// FUNCIÓN PRINCIPAL (PETICIONES GET)
 // ==========================================
 function doGet(e) {
   var params = e.parameter;
   var action = params.action || params.accion || 'formulario';
 
-  // ─── REGISTRO DE ASISTENCIA DIRECTO EN TU SOLAPA (CORREGIDO) ───
-  // ─── REGISTRO DE ASISTENCIA CON DETECTOR DE DUPLICADOS ───
-  if (action === 'registrar_asistencia') {
+  // ─── ACCIÓN 1: VERIFICAR SI EL ALUMNO YA FIRMÓ HOY ───
+  if (action === 'verificar_duplicado') {
+    var emailAlumno = (params.email || '').trim().toLowerCase();
+    var yaExiste = "No";
+    
     try {
       var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-      var sheet = ss.getSheetByName(CONFIG.NOMBRE_HOJA); 
-      
-      if (!sheet) {
-        throw new Error("No se encontró la solapa '" + CONFIG.NOMBRE_HOJA + "'. Revisá el Sheets.");
-      }
-
-      var emailAlumno = (params.email || '').trim().toLowerCase();
-      var marcaDuplicado = "No"; // Por defecto no está duplicado
-
-      // LÓGICA ANTI-DUPLICADOS: Escaneamos el Excel si el alumno ya metió el mail hoy
-      if (emailAlumno !== '') {
+      var sheet = ss.getSheetByName(CONFIG.NOMBRE_HOJA);
+      if (sheet) {
         var data = sheet.getDataRange().getValues();
-        var hoyString = new Date().toDateString(); // Fecha de hoy para comparar puro el día
+        var hoyString = new Date().toDateString();
         
-        // Empezamos desde la fila 1 (saltando cabeceras si las hay)
         for (var i = 1; i < data.length; i++) {
-          var filaEmail = (data[i][6] || '').toString().trim().toLowerCase(); // Columna G: Email
-          var filaFecha = data[i][0]; // Columna A: Timestamp
+          var filaEmail = (data[i][6] || '').toString().trim().toLowerCase(); 
+          var filaFecha = data[i][0]; 
           
           if (filaEmail === emailAlumno && filaFecha instanceof Date) {
             if (filaFecha.toDateString() === hoyString) {
-              marcaDuplicado = "SÍ (Duplicado)"; // ¡Se detectó la repetición el mismo día!
+              yaExiste = "SÍ";
+              break;
+            }
+          }
+        }
+      }
+    } catch(err) {}
+    
+    var callback = params.callback;
+    if (callback) {
+      return ContentService.createTextOutput(callback + '({duplicado:"' + yaExiste + '"});')
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return ContentService.createTextOutput(JSON.stringify({ duplicado: yaExiste })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // ─── ACCIÓN 2: REGISTRAR ASISTENCIA (CON FILSTRO ESTRICTO DE QR) ───
+  if (action === 'registrar_asistencia') {
+    try {
+      var tokenAlumno = (params.token_alumno || '').trim();
+      
+      // CONTROL ANTITRAMPAS: Si el token no coincide con el QR activo en el engranaje, rebota
+      if (!tokenAlumno || !verificarToken(tokenAlumno)) {
+        var callback = params.callback;
+        if (callback) {
+          return ContentService.createTextOutput(callback + '({ok:false, error:"TOKEN_VENCIDO"});')
+            .setMimeType(ContentService.MimeType.JAVASCRIPT);
+        }
+        return ContentService.createTextOutput(JSON.stringify({ ok: false, error: "TOKEN_VENCIDO" })).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+      var sheet = ss.getSheetByName(CONFIG.NOMBRE_HOJA); 
+      if (!sheet) throw new Error("No se encontró la solapa");
+
+      var emailAlumno = (params.email || '').trim().toLowerCase();
+      var marcaDuplicado = "No"; 
+
+      if (emailAlumno !== '') {
+        var data = sheet.getDataRange().getValues();
+        var hoyString = new Date().toDateString(); 
+        
+        for (var i = 1; i < data.length; i++) {
+          var filaEmail = (data[i][6] || '').toString().trim().toLowerCase(); 
+          var filaFecha = data[i][0]; 
+          
+          if (filaEmail === emailAlumno && filaFecha instanceof Date) {
+            if (filaFecha.toDateString() === hoyString) {
+              marcaDuplicado = "SÍ (Duplicado)"; 
               break; 
             }
           }
         }
       }
       
-      // Clavamos la fila manteniendo intacto tu orden original (Agregamos Email en Columna G y Duplicado en H)
+      // Inserción en la planilla
       sheet.appendRow([
-        new Date(),                  // Columna A: Fecha y Hora
-        params.apellido || '',       // Columna B: Apellido (Primero, como estaba antes)
-        params.nombre || '',         // Columna C: Nombre
-        params.pc || '',             // Columna D: Nro PC
-        params.llegada || '',        // Columna E: Estado de llegada
-        params.observaciones || '',  // Columna F: Observaciones
-        emailAlumno,                 // Columna G: NUEVO CAMPO EMAIL
-        marcaDuplicado               // Columna H: MARCA DE ALERTA DUPLICADO
+        new Date(),                  
+        params.apellido || '',       
+        params.nombre || '',         
+        params.pc || '',             
+        params.llegada || '',        
+        params.observaciones || '',  
+        emailAlumno,                 
+        marcaDuplicado               
       ]);
       
       SpreadsheetApp.flush();
 
     } catch(err) {
-      Logger.log("ALERTA: " + err.message);
+      Logger.log("Error al registrar: " + err.message);
     }
 
-    return ContentService.createTextOutput("OK");
-  }
-
-  // 1. Endpoint para registrar el token (Panel del Docente - JSONP)
-  if (action === 'registrar_token') {
-    var tok = params.t;
-    if (tok) {
-      var props = PropertiesService.getScriptProperties();
-      props.setProperty('token_' + tok, JSON.stringify({ ts: Date.now(), token: tok }));
-    }
     var callback = params.callback;
     if (callback) {
-      return ContentService.createTextOutput(callback + '({ok:true});').setMimeType(ContentService.MimeType.JAVASCRIPT);
+      return ContentService.createTextOutput(callback + '({ok:true});')
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
     }
     return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
   }
 
-  // 2. Endpoint para pantalla de Bloqueado
-  if (action === 'bloqueado') {
-    var templateBloqueado = HtmlService.createTemplateFromFile('Bloqueado');
-    return templateBloqueado.evaluate().setTitle('Acceso Bloqueado').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  // ─── ACCIÓN 3: RECIBIR EL NUEVO TOKEN GENERADO POR EL PANEL DOCENTE ───
+  if (action === 'registrar_token') {
+    var tok = params.t;
+    if (tok) {
+      var props = PropertiesService.getScriptProperties();
+      // Pisamos los valores fijos del engranaje en tiempo real
+      props.setProperty('QR_ACTIVO_TOKEN', tok);
+      props.setProperty('QR_ACTIVO_TIMESTAMP', Date.now().toString());
+    }
+    
+    var callback = params.callback;
+    if (callback) {
+      return ContentService.createTextOutput(callback + '({ok:true});')
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
   }
 
-  // 3. FLUJO PRINCIPAL: Cargar el Formulario para el alumno
-  var token = params.t;
-  var materia = params.m ? decodeURIComponent(params.m) : 'Materia';
-
+  // ─── FLUJO POR DEFECTO: MUESTRA EL FORMULARIO HTML AL ALUMNO ───
   var template = HtmlService.createTemplateFromFile('FormularioHTML');
-  template.materia = materia;
-  template.token = token || '';
+  template.materia = params.m ? decodeURIComponent(params.m) : 'Desarrollo de Software';
+  template.token = params.t || '';
   template.latAula = CONFIG.LAT_AULA;
   template.lngAula = CONFIG.LNG_AULA;
   template.radioMetros = CONFIG.RADIO_METROS;
@@ -107,92 +147,47 @@ function doGet(e) {
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-// ==========================================
-// OTRAS FUNCIONES AUXILIARES DEL SISTEMA
-// ==========================================
 function doPost(e) {
-  var datos = JSON.parse(e.postData.contents);
-  try {
-    var sheet = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID).getSheetByName(CONFIG.NOMBRE_HOJA);
-    sheet.appendRow([
-      new Date(),           
-      datos.apellido,       
-      datos.nombre,         
-      datos.pc,             
-      datos.llegada,        
-      datos.observaciones   
-    ]);
-    SpreadsheetApp.flush();
-  } catch(err) {}
-
-  return ContentService
-    .createTextOutput(JSON.stringify({ ok: true }))
-    .setMimeType(ContentService.MimeType.JSON);
+  return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
 }
 
-function registrarToken(token) {
+// ==========================================
+// VALIDACIÓN INTERNA CONTRA EL ENGRANAJE
+// ==========================================
+function verificarToken(tokenEnviado) {
+  if (!tokenEnviado) return false;
+  
   var props = PropertiesService.getScriptProperties();
-  props.setProperty('token_' + token, JSON.stringify({ ts: Date.now(), token: token }));
-  limpiarTokensVencidos(props);
-}
-
-function verificarToken(token) {
-  if (!token) return false;
-  var props = PropertiesService.getScriptProperties();
-  var raw = props.getProperty('token_' + token);
-  if (!raw) return false;
+  var tokenRealEnPantalla = props.getProperty('QR_ACTIVO_TOKEN');
+  var timestampPantalla = props.getProperty('QR_ACTIVO_TIMESTAMP');
+  
+  if (!tokenRealEnPantalla || !timestampPantalla) return false;
+  
+  // Si el token del alumno no coincide exactamente con el del proyector, se corta acá
+  if (tokenEnviado !== tokenRealEnPantalla) return false; 
+  
   try {
-    var data = JSON.parse(raw);
-    return (Date.now() - data.ts) / 1000 <= CONFIG.VALIDEZ_TOKEN_SEG;
+    var transcurrido = (Date.now() - parseInt(timestampPantalla, 10)) / 1000;
+    return transcurrido <= CONFIG.VALIDEZ_TOKEN_SEG; 
   } catch (e) {
     return false;
   }
 }
 
-function limpiarTokensVencidos(props) {
-  var keys = props.getKeys();
-  var ahora = Date.now();
-  keys.forEach(function(key) {
-    if (!key.startsWith('token_')) return;
-    try {
-      var data = JSON.parse(props.getProperty(key));
-      if ((ahora - data.ts) / 1000 > CONFIG.VALIDEZ_TOKEN_SEG * 2) {
-        props.deleteProperty(key);
-      }
-    } catch (e) {
-      props.deleteProperty(key);
+// ==========================================
+// 🧹 FUNCIÓN BARRENDERA (Para ejecutar desde el editor)
+// ==========================================
+function limpiarBasuraVieja() {
+  var props = PropertiesService.getScriptProperties();
+  var todas = props.getProperties();
+  var contador = 0;
+  
+  for (var clave in todas) {
+    // Si la propiedad empieza con el formato viejo "token_", la vuela
+    if (clave.indexOf('token_') === 0) {
+      props.deleteProperty(clave);
+      contador++;
     }
-  });
-}
-
-function calcularDistanciaMetros(lat1, lng1, lat2, lng2) {
-  var R = 6371000;
-  var dLat = (lat2 - lat1) * Math.PI / 180;
-  var dLng = (lng2 - lng1) * Math.PI / 180;
-  var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-          Math.sin(dLng/2) * Math.sin(dLng/2);
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-function guardarAsistencia(datos) {
-  var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-  var hoja = ss.getSheetByName(CONFIG.NOMBRE_HOJA);
-  if (!hoja) {
-    hoja = ss.insertSheet(CONFIG.NOMBRE_HOJA);
-    hoja.appendRow(['Timestamp','Nombre','Apellido','Email','Materia','Lat','Lng','Distancia (m)']);
-    hoja.getRange(1,1,1,8).setFontWeight('bold');
-    hoja.setFrozenRows(1);
   }
-  hoja.appendRow([
-    Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm:ss'),
-    datos.nombre, datos.apellido, datos.email,
-    datos.materia || '—', datos.lat, datos.lng, Math.round(datos.distancia)
-  ]);
-}
-
-function jsonResponse(obj) {
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
+  Logger.log("¡Limpieza completada! Se eliminaron " + contador + " tokens fantasmas.");
 }
