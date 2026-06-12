@@ -11,200 +11,68 @@
       --bg-campos: #0f111a;      
       --text: #f8fafc;
       --text-muted: #94a3b8;
-      --border: #3a3f58; /* Borde más claro para que se note el cuadrado */
+      --border: #3a3f58;
       --primary: #38bdf8;
       --primary-hover: #0ea5e9;
       --success: #10b981;
       --error: #ef4444;
     }
 
-    *, *::before, *::after {
-      box-sizing: border-box;
-    }
+    *, *::before, *::after { box-sizing: border-box; }
 
     body {
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       background-color: var(--bg-pantalla);
       color: var(--text);
-      margin: 0;
-      padding: 0; /* Sin márgenes en el fondo */
-      display: flex;
-      justify-content: center;
-      align-items: flex-start; /* Arranca desde arriba en el celu */
+      margin: 0; padding: 0; 
+      display: flex; justify-content: center; align-items: flex-start; 
       min-height: 100vh;
     }
 
-    /* TARJETA ADAPTADA PARA CELULAR */
     .card {
       background-color: var(--bg-tarjeta);
-      width: 100%;
-      max-width: 500px;
-      min-height: 100vh; /* Ocupa todo el alto en el celu */
+      width: 100%; max-width: 500px; min-height: 100vh; 
       padding: 30px 20px;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
     }
 
-    /* En compus o pantallas más grandes, que mantenga forma de tarjeta */
     @media (min-width: 480px) {
-      body {
-        padding: 20px;
-        align-items: center;
-      }
-      .card {
-        min-height: auto;
-        border: 1px solid #2a2d42;
-        border-radius: 24px;
-      }
+      body { padding: 20px; align-items: center; }
+      .card { min-height: auto; border: 1px solid #2a2d42; border-radius: 24px; }
     }
 
-    h2 {
-      margin-top: 0;
-      margin-bottom: 6px;
-      font-size: 30px; /* Título bien grande */
-      color: var(--primary);
-      font-weight: 800;
-      letter-spacing: -0.5px;
-    }
+    h2 { margin-top: 0; margin-bottom: 6px; font-size: 30px; color: var(--primary); font-weight: 800; letter-spacing: -0.5px; }
+    .materia-title { font-size: 16px; color: var(--text-muted); margin-bottom: 30px; font-weight: 600; text-transform: uppercase; }
+    .field { margin-bottom: 26px; }
+    label { display: block; margin-bottom: 12px; font-size: 17px; font-weight: 700; color: #e2e8f0; }
 
-    .materia-title {
-      font-size: 16px;
-      color: var(--text-muted);
-      margin-bottom: 30px;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
-    .field {
-      margin-bottom: 26px; /* Más espacio entre cajas */
-    }
-
-    label {
-      display: block;
-      margin-bottom: 12px;
-      font-size: 17px; /* Títulos de campos más grandes */
-      font-weight: 700;
-      color: #e2e8f0;
-    }
-
-    /* CAMBIO RADICAL: Entradas de texto gigantes para el dedo */
-    input[type="text"],
-    input[type="number"],
-    input[type="email"],
-    select {
-      width: 100%;
-      background-color: var(--bg-campos);
-      border: 2px solid var(--border);
-      color: var(--text);
-      padding: 18px 16px; /* Altura máxima para control táctil */
-      border-radius: 14px;
-      font-size: 18px; /* Texto grande y legible adentro del campo */
-      outline: none;
-      transition: all 0.2s ease;
-      -webkit-appearance: none; /* Quita estilos raros en móviles */
+    input[type="text"], input[type="number"], input[type="email"], select {
+      width: 100%; background-color: var(--bg-campos); border: 2px solid var(--border);
+      color: var(--text); padding: 18px 16px; border-radius: 14px; font-size: 18px; outline: none;
+      transition: all 0.2s ease; -webkit-appearance: none; 
     }
 
     input:focus, select:focus {
-      border-color: var(--primary);
-      background-color: #131622;
+      border-color: var(--primary); background-color: #131622;
       box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.25);
     }
 
-    /* ESTADO DEL GPS */
-    .gps-status {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 18px;
-      border-radius: 14px;
-      font-size: 15px;
-      margin-bottom: 30px;
-      border: 1px solid transparent;
-      font-weight: 600;
-    }
+    .gps-status { display: flex; align-items: center; gap: 10px; padding: 18px; border-radius: 14px; font-size: 15px; margin-bottom: 30px; border: 1px solid transparent; font-weight: 600; }
+    .gps-status.loading { background-color: #1e293b; border-color: #334155; color: #94a3b8; }
+    .gps-status.success { background-color: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #34d399; }
+    .gps-status.error { background-color: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); color: #f87171; }
 
-    .gps-status.loading {
-      background-color: #1e293b;
-      border-color: #334155;
-      color: #94a3b8;
-    }
-
-    .gps-status.success {
-      background-color: rgba(16, 185, 129, 0.15);
-      border-color: rgba(16, 185, 129, 0.4);
-      color: #34d399;
-    }
-
-    .gps-status.error {
-      background-color: rgba(239, 68, 68, 0.15);
-      border-color: rgba(239, 68, 68, 0.4);
-      color: #f87171;
-    }
-
-    /* BOTÓN DE ENVÍO MASIVO */
     .btn {
-      width: 100%;
-      background-color: var(--primary);
-      color: #ffffff;
-      border: none;
-      padding: 20px; /* Botón imponente */
-      border-radius: 14px;
-      font-size: 19px;
-      font-weight: 800;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      margin-top: auto; /* Empuja el botón hacia abajo si queda espacio */
-      box-shadow: 0 4px 14px rgba(56, 189, 248, 0.3);
+      width: 100%; background-color: var(--primary); color: #ffffff; border: none; padding: 20px; 
+      border-radius: 14px; font-size: 19px; font-weight: 800; cursor: pointer; transition: all 0.2s ease;
+      margin-top: auto; box-shadow: 0 4px 14px rgba(56, 189, 248, 0.3);
     }
+    .btn:disabled { background-color: #1e293b; color: #475569; border: 1px solid #334155; cursor: not-allowed; box-shadow: none; }
 
-    .btn:active:not(:disabled) {
-      transform: scale(0.97);
-    }
-
-    .btn:hover:not(:disabled) {
-      background-color: var(--primary-hover);
-    }
-
-    .btn:disabled {
-      background-color: #1e293b;
-      color: #475569;
-      border: 1px solid #334155;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-
-    .error-banner {
-      background-color: rgba(239, 68, 68, 0.15);
-      border: 1px solid var(--error);
-      color: var(--error);
-      padding: 16px;
-      border-radius: 14px;
-      font-size: 16px;
-      margin-bottom: 25px;
-      display: none;
-      font-weight: 600;
-    }
-
-    .success-screen {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      padding: 40px 10px;
-    }
-
-    .success-icon {
-      width: 80px;
-      height: 80px;
-      background-color: rgba(16, 185, 129, 0.1);
-      color: var(--success);
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 24px;
-    }
+    .error-banner { background-color: rgba(239, 68, 68, 0.15); border: 1px solid var(--error); color: var(--error); padding: 16px; border-radius: 14px; font-size: 16px; margin-bottom: 25px; display: none; font-weight: 600; }
+    .success-screen { display: none; flex-direction: column; align-items: center; text-align: center; padding: 40px 10px; }
+    .success-icon { width: 80px; height: 80px; background-color: rgba(16, 185, 129, 0.1); color: var(--success); border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-bottom: 24px; }
   </style>
 </head>
 <body>
@@ -222,13 +90,10 @@
 
     <div id="form-card">
       <h2>Presentismo Digital</h2>
-      <div class="materia-title">Materia: Desarrollo de Software</div>
+      <div class="materia-title" id="materia-label">Materia: Cargando...</div>
 
       <div id="error-msg" class="error-banner"></div>
-
-      <div id="gps-status" class="gps-status loading">
-        <span>Buscando señal GPS de alta precisión...</span>
-      </div>
+      <div id="gps-status" class="gps-status loading"><span>Buscando señal GPS...</span></div>
 
       <div class="field">
         <label for="nombre">Nombre</label>
@@ -242,7 +107,7 @@
 
       <div class="field">
         <label for="email">Correo Electrónico</label>
-        <input type="email" id="email" placeholder="ejemplo@correo.com" required />
+        <input type="email" id="email" placeholder="ejemplo@correo.com" onblur="verificarMailDuplicado()" required />
       </div>
 
       <div class="field">
@@ -263,21 +128,28 @@
         <input type="text" id="input-observaciones" placeholder="Ej: Falla el teclado, sin internet, etc." />
       </div>
 
-      <button type="button" id="btn-submit" class="btn" onclick="enviarFormulario()" disabled>
-        Esperando ubicación...
-      </button>
+      <button type="button" id="btn-submit" class="btn" onclick="enviarFormulario()" disabled>Esperando ubicación...</button>
     </div>
   </div>
 
   <script>
-    var TOKEN        = "<?= token ?>";
-    var MATERIA      = "<?= materia ?>";
-    var LAT_AULA     = parseFloat("<?= latAula ?>");
-    var LNG_AULA     = parseFloat("<?= lngAula ?>");
-    var RADIO_METROS = parseInt("<?= radioMetros ?>");
+    // Recuperar el token (?t=) y la materia (?m=) desde la URL del QR dinámico
+    const urlParams = new URLSearchParams(window.location.search);
+    var TOKEN        = urlParams.get('t') || "<?= token ?>";
+    var MATERIA      = urlParams.get('m') || "<?= materia ?>";
+    
+    var LAT_AULA     = -34.622790;
+    var LNG_AULA     = -58.541131;
+    var RADIO_METROS = 500;
     var ubicacionAlumno = null;
+    
+    // REVISÁ QUE ESTA URL COINCIDA CON TU ENLACE ACTUAL DE GOOGLE /EXEC
+    var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz7lsLM6t3ujDdnYfcX7unG7_Lk7R9iC5kT6UV76V-NVtgisZ-fsCVHeRhnAZXaYA-60w/exec";
 
     window.onload = function() {
+      if(MATERIA) {
+        document.getElementById('materia-label').textContent = "Materia: " + decodeURIComponent(MATERIA);
+      }
       pedirUbicacion();
     };
 
@@ -287,14 +159,11 @@
       statusEl.innerHTML = '<span>Buscando señal GPS de alta precisión...</span>';
 
       if (!navigator.geolocation) {
-        setGpsError('Tu navegador o celular no soporta Geolocalización.');
+        setGpsError('Tu navegador no soporta ubicación.');
         return;
       }
-
       navigator.geolocation.getCurrentPosition(onUbicacionOk, onUbicacionError, {
-        enableHighAccuracy: true, 
-        timeout: 12000,           
-        maximumAge: 0             
+        enableHighAccuracy: true, timeout: 12000, maximumAge: 0              
       });
     }
 
@@ -305,26 +174,21 @@
       var dist = haversineMetros(LAT_AULA, LNG_AULA, lat, lng);
 
       if (dist > RADIO_METROS) {
-        setGpsError('Estás fuera del rango permitido · A ' + Math.round(dist) + 'm del aula (Máx: ' + RADIO_METROS + 'm).');
+        setGpsError('Fuera del rango permitido para el aula.');
         document.getElementById('btn-submit').disabled = true;
         document.getElementById('btn-submit').textContent = 'Fuera de rango';
         return;
       }
-
-      setGpsOk(dist);
+      setGpsOk();
       document.getElementById('btn-submit').disabled = false;
       document.getElementById('btn-submit').textContent = 'Registrar asistencia';
     }
 
     function onUbicacionError(err) {
-      var msg = 'Error de GPS desconocido.';
-      if (err.code === 1) msg = 'Permiso de ubicación denegado. Habilitá el GPS para esta página.';
-      if (err.code === 2) msg = 'Señal de GPS débil o inexistente. Movete cerca de una ventana.';
-      if (err.code === 3) msg = 'Tiempo de espera agotado buscando tu ubicación.';
-      setGpsError(msg);
+      setGpsError('Error de GPS. Por favor activa la ubicación.');
     }
 
-    function setGpsOk(dist) {
+    function setGpsOk() {
       var el = document.getElementById('gps-status');
       el.className = 'gps-status success';
       el.innerHTML = '<span>Ubicación validada de forma correcta.</span>';
@@ -343,8 +207,35 @@
       var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
               Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
               Math.sin(dLon / 2) * Math.sin(dLon / 2);
-      var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c;
+      return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+    }
+
+    function verificarMailDuplicado() {
+      var email = document.getElementById('email').value.trim().toLowerCase();
+      if (!email) return;
+
+      document.getElementById('error-msg').style.display = 'none';
+      const antiguoScript = document.getElementById('jsonp-verificar');
+      if (antiguoScript) antiguoScript.remove();
+
+      const script = document.createElement('script');
+      script.id = 'jsonp-verificar';
+      script.src = APPS_SCRIPT_URL + "?action=verificar_duplicado&email=" + encodeURIComponent(email) + "&callback=resultadoVerificacionCallback";
+      document.body.appendChild(script);
+    }
+
+    function resultadoVerificacionCallback(response) {
+      var btn = document.getElementById('btn-submit');
+      if (response.duplicado === "SÍ") {
+        mostrarError('⚠️ Acceso denegado: Ya registraste tu asistencia el día de hoy.');
+        btn.disabled = true; 
+        btn.textContent = 'Ya registrado';
+      } else {
+        if (ubicacionAlumno) { 
+          btn.disabled = false;
+          btn.textContent = 'Registrar asistencia';
+        }
+      }
     }
 
     function enviarFormulario() {
@@ -354,9 +245,8 @@
       var pc            = document.getElementById('input-pc').value.trim();
       var llegada       = document.getElementById('select-llegada').value;
       var observaciones = document.getElementById('input-observaciones').value.trim();
-      var errEl         = document.getElementById('error-msg');
 
-      errEl.style.display = 'none';
+      document.getElementById('error-msg').style.display = 'none';
 
       if (!nombre || !apellido || !email || !pc) {
         mostrarError('Por favor completá todos los campos obligatorios.');
@@ -367,8 +257,7 @@
       btn.disabled = true;
       btn.textContent = 'Enviando...';
 
-      var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz7lsLM6t3ujDdnYfcX7unG7_Lk7R9iC5kT6UV76V-NVtgisZ-fsCVHeRhnAZXaYA-60w/exec?v=2"; 
-
+      // ENVIAMOS EL TOKEN QUE SACO DEL QR JUNTO A LA ASISTENCIA
       var urlFinal = APPS_SCRIPT_URL + 
         "?action=registrar_asistencia" +
         "&nombre=" + encodeURIComponent(nombre) +
@@ -376,23 +265,38 @@
         "&email=" + encodeURIComponent(email) + 
         "&pc=" + encodeURIComponent(pc) +
         "&llegada=" + encodeURIComponent(llegada) +
-        "&observaciones=" + encodeURIComponent(observaciones || "Sin observaciones");
+        "&observaciones=" + encodeURIComponent(observaciones || "Sin observaciones") +
+        "&token_alumno=" + encodeURIComponent(TOKEN);
 
-      fetch(urlFinal, {
-        method: 'GET',
-        mode: 'no-cors', 
-        cache: 'no-cache'
-      }).then(function() {
+      const antiguoScript = document.getElementById('jsonp-asistencia');
+      if (antiguoScript) antiguoScript.remove();
+
+      const script = document.createElement('script');
+      script.id = 'jsonp-asistencia';
+      script.src = urlFinal + "&callback=asistenciaGrabadaCallback";
+      document.body.appendChild(script);
+    }
+
+    function asistenciaGrabadaCallback(response) {
+      if (response.ok) {
         document.getElementById('form-card').style.display = 'none';
         document.getElementById('gps-status').style.display = 'none';
         document.getElementById('success-screen').style.display = 'flex';
+        
+        var nombre = document.getElementById('nombre').value.trim();
+        var pc = document.getElementById('input-pc').value.trim();
         document.getElementById('success-detail').textContent =
           '¡Hola ' + nombre + '! Tu asistencia fue enviada con éxito en la PC ' + pc + '.';
-      }).catch(function(err) {
-        mostrarError('Error de red al enviar el formulario.');
+      } else {
+        if (response.error === "TOKEN_VENCIDO") {
+          mostrarError('⚠️ El código QR ya expiró o es inválido. Volvé a escanear el QR actual del docente.');
+        } else {
+          mostrarError('El servidor no pudo procesar la asistencia.');
+        }
+        var btn = document.getElementById('btn-submit');
         btn.disabled = false;
         btn.textContent = 'Registrar asistencia';
-      });
+      }
     }
 
     function mostrarError(msg) {
